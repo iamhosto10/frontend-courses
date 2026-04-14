@@ -9,15 +9,24 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuthStore } from "@/store/useAuthStore";
 import { api } from "@/lib/api";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [nombre, setNombre] = useState("");
+  const [correo, setCorreo] = useState("");
+  const [contraseña, setContraseña] = useState("");
+  const [rol, setRol] = useState("estudiante");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,35 +36,32 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Consume the login endpoint
-      const response = await api.post("/auth/login", { email, password });
+      const response = await api.post("/auth/register", {
+        nombre,
+        correo,
+        contraseña,
+        rol,
+      });
+
       const { token } = response.data;
 
       if (!token) {
         throw new Error("Token not found in response");
       }
 
-      // Decode the token (JWT consists of 3 parts separated by dots)
-      // The payload is the second part
-      const payloadBase64 = token.split(".")[1];
       // Fix base64url padding and characters for atob
+      const payloadBase64 = token.split(".")[1];
       const base64 = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
-      // Use atob to decode base64
       const decodedPayload = JSON.parse(atob(base64));
+      const userRole = decodedPayload.role;
 
-      const role = decodedPayload.role;
-
-      if (role !== "estudiante" && role !== "profesor") {
+      if (userRole !== "estudiante" && userRole !== "profesor") {
         throw new Error("Invalid role in token");
       }
 
-      // Save token and role in store/cookies
-      login(token, role);
-
-      // Redirect to dashboard
+      login(token, userRole);
       router.push("/dashboard");
     } catch (err: unknown) {
-      // Show error from API or fallback error message
       if (typeof err === "object" && err !== null && "response" in err) {
         const errorResponse = (err as Record<string, unknown>).response as Record<string, unknown>;
         if (errorResponse?.data && typeof (errorResponse.data as Record<string, unknown>).message === "string") {
@@ -77,7 +83,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      {/* Background blobs or simple styling for modern look */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-blue-900/20 blur-[120px] rounded-full" />
         <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-blue-600/10 blur-[120px] rounded-full" />
@@ -91,8 +96,8 @@ export default function LoginPage() {
       >
         <div className="bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-zinc-400">Sign in to your account to continue</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Create an Account</h1>
+            <p className="text-zinc-400">Sign up to get started</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -108,14 +113,29 @@ export default function LoginPage() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-zinc-300">
+                <Label htmlFor="nombre" className="text-zinc-300">
+                  Name
+                </Label>
+                <Input
+                  id="nombre"
+                  type="text"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  placeholder="John Doe"
+                  required
+                  className="bg-zinc-950/50 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="correo" className="text-zinc-300">
                   Email
                 </Label>
                 <Input
-                  id="email"
+                  id="correo"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={correo}
+                  onChange={(e) => setCorreo(e.target.value)}
                   placeholder="name@example.com"
                   required
                   className="bg-zinc-950/50 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500"
@@ -123,18 +143,33 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-zinc-300">
+                <Label htmlFor="contraseña" className="text-zinc-300">
                   Password
                 </Label>
                 <Input
-                  id="password"
+                  id="contraseña"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={contraseña}
+                  onChange={(e) => setContraseña(e.target.value)}
                   placeholder="••••••••"
                   required
                   className="bg-zinc-950/50 border-zinc-800 text-white placeholder:text-zinc-600 focus-visible:ring-blue-500"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rol" className="text-zinc-300">
+                  Role
+                </Label>
+                <Select value={rol} onValueChange={(val) => setRol(val || "estudiante")} required>
+                  <SelectTrigger className="bg-zinc-950/50 border-zinc-800 text-white focus:ring-blue-500">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                    <SelectItem value="estudiante" className="focus:bg-zinc-800 focus:text-white">Estudiante</SelectItem>
+                    <SelectItem value="profesor" className="focus:bg-zinc-800 focus:text-white">Profesor</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -146,17 +181,17 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  Creating account...
                 </>
               ) : (
-                "Sign In"
+                "Sign Up"
               )}
             </Button>
 
             <p className="text-center text-zinc-400 text-sm mt-4">
-              Don&apos;t have an account?{" "}
-              <Link href="/register" className="text-blue-500 hover:text-blue-400 transition-colors">
-                Sign up
+              Already have an account?{" "}
+              <Link href="/login" className="text-blue-500 hover:text-blue-400 transition-colors">
+                Sign in
               </Link>
             </p>
           </form>
