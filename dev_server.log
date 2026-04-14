@@ -2,18 +2,11 @@
 > frontend-courses@0.1.0 dev
 > next dev
 
-⚠ Port 3000 is in use by an unknown process, using available port 3001 instead.
 ▲ Next.js 16.2.3 (Turbopack)
-- Local:         http://localhost:3001
-- Network:       http://192.168.0.2:3001
-- Environments: .env.local
-✓ Ready in 742ms
-⨯ Another next dev server is already running.
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 533ms
 
-- Local:        http://localhost:3000
-- PID:          55657
-- Dir:          /app
-- Log:          .next/dev/logs/next-development.log
-
-Run kill 55657 to stop it.
-[?25h
+○ Compiling / ...
+ GET /api/courses 404 in 828ms (next.js: 585ms, application-code: 243ms)
+ GET / 200 in 5.9s (next.js: 4.7s, application-code: 1193ms)
